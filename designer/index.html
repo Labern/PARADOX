@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PARADOX Designer</title>
+<style>
+/* Layout: the garment stands in a lit studio on the left; the controls run down a rail on the right and stack under it on phones. */
+:root{
+  --bg:#0a0a0a; --surface:#121212; --raise:#1a1a1a; --line:#2a2a2a;
+  --fg:#ffffff; --muted:#a6a6a6;
+  --violet:#5a4a92; --lav:#836bb7; --deep:#462d7d; --green:#7ed957; --red:#e3241b;
+  --display:Canela,"Canela Text","Hiragino Mincho ProN","Yu Mincho",Georgia,serif;
+  --sans:Graphik,"Hiragino Sans","Helvetica Neue",Arial,sans-serif;
+  color-scheme:dark;
+}
+[hidden]{display:none!important}
+html,body{background:var(--bg);color:var(--fg)}
+body{font-family:var(--sans);font-size:14px;line-height:1.5;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1380px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding-bottom:20px;border-bottom:1px solid var(--line)}
+header img{height:20px;width:auto;display:block}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.main{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.stage-col{flex:999 1 580px;min-width:0;display:flex;flex-direction:column;gap:16px}
+.rail{flex:1 1 340px;min-width:0;max-width:100%;display:flex;flex-direction:column;gap:20px}
+.stagebox{background:var(--surface);border:1px solid var(--line);padding:clamp(16px,3vw,32px);display:flex;flex-direction:column;gap:16px}
+.titlerow{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+h1{margin:0;font-family:var(--display);font-weight:400;font-size:clamp(40px,6vw,72px);line-height:.95;text-wrap:balance}
+.red-title{font-weight:700;font-size:clamp(18px,2.6vw,28px);letter-spacing:.02em;color:var(--red);text-transform:uppercase;line-height:1;overflow-wrap:anywhere}
+.sub{margin:6px 0 0;color:var(--muted);font-size:15px}
+.dname{margin:4px 0 0;color:var(--lav);font-size:13px;letter-spacing:.04em}
+.garment{position:relative;display:block;min-height:400px;background:radial-gradient(ellipse 70% 62% at 50% 42%,#3c3c40 0,#1d1d20 52%,#111113 100%);border:1px solid var(--line)}
+.garment canvas{display:block;width:100%;touch-action:none;cursor:default}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:12px;letter-spacing:.16em;text-transform:uppercase;pointer-events:none}
+.design-cta{display:flex;justify-content:center}
+.design-btn{appearance:none;border:0;cursor:pointer;width:min(100%,620px);min-height:68px;border-radius:999px;color:#fff;
+  font:700 15px/1 var(--sans);letter-spacing:.22em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:14px;
+  background:linear-gradient(135deg,#7c66c8 0%,#5a4a92 38%,#462d7d 68%,#2a1659 100%);
+  box-shadow:0 10px 34px rgba(70,45,125,.55),inset 0 1px 0 rgba(255,255,255,.22);transition:transform .2s,filter .2s,box-shadow .2s}
+.design-btn:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 14px 40px rgba(90,74,146,.6),inset 0 1px 0 rgba(255,255,255,.28)}
+.design-btn:focus-visible{outline:2px solid var(--fg);outline-offset:4px}
+.design-btn .st{font-size:13px;letter-spacing:.06em;opacity:.9}
+.hint{text-align:center;margin:0}
+.info{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.panel{background:var(--raise);border:1px solid var(--line);padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+dl{margin:0;display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);column-gap:12px;font-variant-numeric:tabular-nums;font-size:13px}
+dt,dd{margin:0;padding:6px 0;border-top:1px solid var(--line)}
+dt{color:var(--muted)} dd{text-align:right;overflow-wrap:anywhere}
+dt.lh,dd.lh{padding-top:14px;color:var(--lav);font-size:12px;letter-spacing:.08em;text-transform:uppercase;border-top-color:#3a3a3a}
+fieldset{margin:0;padding:0;border:0;display:flex;flex-direction:column;gap:10px;min-width:0}
+legend{padding:0;margin-bottom:10px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.group{display:flex;flex-direction:column;gap:14px;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button,.btn{font:inherit;font-size:13px;color:var(--fg);background:var(--raise);border:1px solid var(--line);border-radius:2px;padding:9px 12px;cursor:pointer;min-height:40px}
+.seg button[aria-pressed="true"]{border-color:var(--fg);background:var(--bg)}
+.seg button[data-v="custom"]{border-color:var(--violet);color:#d9d0f5}
+.btn.primary{background:var(--violet);border-color:var(--violet);color:#ffffff;letter-spacing:.1em;text-transform:uppercase;font-weight:500}
+.btn:disabled,.seg button:disabled{opacity:.4;cursor:not-allowed}
+.btn:hover:not(:disabled),.seg button:hover:not(:disabled){border-color:var(--muted)}
+.linkish{appearance:none;background:none;border:0;padding:0;color:var(--lav);font:inherit;font-size:13px;cursor:pointer;text-align:left;text-decoration:underline;text-underline-offset:3px}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--lav);outline-offset:2px}
+.logos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.logos button{font:inherit;color:var(--fg);background:var(--raise);border:1px solid var(--line);border-radius:2px;padding:8px;cursor:pointer;display:flex;flex-direction:column;gap:6px;align-items:stretch;text-align:left;min-height:110px}
+.logos button[aria-pressed="true"]{border-color:var(--fg)}
+.thumb{display:flex;align-items:center;justify-content:center;border-radius:2px;overflow:hidden}
+.logos .thumb{height:72px;padding:6px}
+.thumb img{max-height:100%;max-width:100%;display:block}
+.logos span:last-child{font-size:11px;color:var(--muted);line-height:1.3}
+.layers{display:flex;flex-direction:column;gap:6px}
+.layer{display:flex;gap:6px;align-items:stretch}
+.layer .pick{flex:1;min-width:0;display:flex;gap:10px;align-items:center;text-align:left;font:inherit;color:var(--fg);background:var(--raise);border:1px solid var(--line);border-radius:2px;padding:6px;cursor:pointer}
+.layer.on .pick{border-color:var(--lav)}
+.layer .thumb{width:44px;height:44px;padding:4px;flex:none}
+.layer b{display:block;font-weight:500;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.layer small{display:block;color:var(--muted);font-size:12px}
+.layer .pick span:last-child{min-width:0}
+.layer .x{width:40px;font:inherit;font-size:18px;color:var(--muted);background:var(--raise);border:1px solid var(--line);border-radius:2px;cursor:pointer}
+.sw{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sw button{width:26px;height:26px;border-radius:50%;border:1px solid #3a3a3a;cursor:pointer;padding:0}
+.sw button[aria-pressed="true"]{outline:2px solid var(--fg);outline-offset:2px}
+.sw button:disabled{opacity:.35;cursor:not-allowed}
+input[type=color]{width:36px;height:30px;border:1px solid var(--line);background:var(--raise);padding:2px;border-radius:2px;cursor:pointer}
+.range{display:grid;grid-template-columns:72px minmax(0,1fr) 64px;align-items:center;gap:10px;font-size:13px}
+.range label{color:var(--muted)}
+.range output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--lav)}
+input[type=text],input[type=number],select{font:inherit;color:var(--fg);background:var(--raise);border:1px solid var(--line);border-radius:2px;padding:9px 10px;width:100%;box-sizing:border-box}
+label.field{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+label.drop{border:1px dashed var(--muted);padding:12px;text-align:center;font-size:13px;color:var(--muted);border-radius:2px;opacity:.38;cursor:not-allowed}
+label.drop input{position:absolute;width:1px;height:1px;opacity:0}
+.note{font-size:12px;color:var(--muted);margin:0;line-height:1.5}
+.warn{font-size:12px;color:var(--red);margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+.list{display:flex;flex-direction:column;gap:6px}
+.list-row{display:flex;gap:6px;align-items:center}
+.list-row .btn:first-child{flex:1;text-align:left;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toast{font-size:12px;color:var(--green);min-height:18px;overflow-wrap:anywhere}
+.linkbox{display:flex;gap:6px}
+.linkbox input{font-size:12px;color:var(--muted)}
+.order{background:var(--raise);border:1px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.order .top{display:flex;justify-content:space-between;gap:8px}
+.pill{font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid var(--green);color:var(--green);white-space:nowrap}
+.feat{font:inherit;color:var(--fg);text-align:left;background:linear-gradient(135deg,rgba(124,102,200,.18),rgba(42,22,89,.35));border:1px solid var(--violet);border-radius:2px;padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;gap:4px}
+.feat b{font-weight:500;font-size:14px}.feat small{color:var(--muted);font-size:12px}
+.feat:hover{border-color:var(--lav)}
+.shared-banner{background:var(--deep);padding:10px 14px;font-size:13px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center}
+footer{font-size:12px;color:var(--muted);padding-top:16px;border-top:1px solid var(--line)}
+@media (max-width:560px){.info{grid-template-columns:minmax(0,1fr)}.logos{grid-template-columns:repeat(2,minmax(0,1fr))}.design-btn{min-height:60px;font-size:13px;letter-spacing:.16em}}
+</style>
+<style>body{margin:0}img{max-width:100%}</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img id="hdrMark" alt="★★★★★ × PARADOX">
+    <div class="eyebrow">Designer · one shape, your colours</div>
+  </header>
+
+  <div class="shared-banner" id="sharedBanner" hidden>
+    <span id="sharedText">You opened a shared design.</span>
+    <button class="btn" type="button" id="sharedDismiss">Make it mine</button>
+  </div>
+
+  <div class="main">
+    <section class="stage-col" aria-label="Preview">
+      <div class="stagebox">
+        <div class="titlerow">
+          <div>
+            <h1 id="gName">Hoodie</h1>
+            <p class="sub" id="gSub">Brushed-back fleece, lined hood.</p>
+            <p class="dname" id="designName"></p>
+          </div>
+          <div class="red-title" id="edTitle"></div>
+        </div>
+        <div class="seg" id="viewSeg" style="justify-content:center">
+          <button type="button" data-v="front">Front</button>
+          <button type="button" data-v="side">Side</button>
+          <button type="button" data-v="back">Back</button>
+        </div>
+        <div class="garment" id="stage"><div class="loading" id="loading">Cutting the pattern…</div></div>
+        <div class="design-cta">
+          <button type="button" class="design-btn" id="designBtn"><span class="st">★★★★★</span>Design your logo</button>
+        </div>
+        <p class="note hint">Drag the garment to turn it. Drag a logo to move it anywhere, round to the back if you like. Scroll or pinch to zoom.</p>
+      </div>
+      <div class="info">
+        <div class="panel">
+          <div class="eyebrow">Print specification</div>
+          <dl id="spec"></dl>
+          <p class="warn" id="embWarn" hidden>Embroidery needs letters at least 5 mm tall. Make the logo bigger or switch to screen print.</p>
+        </div>
+        <div class="panel">
+          <div class="eyebrow">Order</div>
+          <div class="row2">
+            <label class="field" for="osize">Size
+              <select id="osize"><option>XS</option><option>S</option><option selected>M</option><option>L</option><option>XL</option><option>XXL</option></select>
+            </label>
+            <label class="field" for="oqty">Quantity
+              <input type="number" id="oqty" min="1" max="50" value="1">
+            </label>
+          </div>
+          <label class="field" for="oname">Who gets the gear?
+            <input type="text" id="oname" maxlength="60" placeholder="Name">
+          </label>
+          <label class="field" for="onote">Delivery note
+            <input type="text" id="onote" maxlength="140" placeholder="Address or pickup details">
+          </label>
+          <button class="btn primary" type="button" id="orderBtn">Send to print</button>
+          <p class="note" id="orderNote">Once complete, we will review your order, send it to the factory, and ship it to you as soon as possible. We'll keep you updated every step of the way.</p>
+          <div class="toast" id="orderToast" role="status"></div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="rail" aria-label="Customise">
+      <div class="group">
+        <fieldset>
+          <legend>Garment</legend>
+          <div class="seg" id="garmentSeg">
+            <button type="button" data-v="tee">T-shirt · £55</button>
+            <button type="button" data-v="long">Long sleeve · £75</button>
+            <button type="button" data-v="hoodie">Hoodie · £95</button>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Fabric colour</legend>
+          <div class="sw" id="fabricSw"></div>
+        </fieldset>
+      </div>
+
+      <div class="group">
+        <fieldset>
+          <legend>Logo style</legend>
+          <div class="logos" id="logoGrid"></div>
+          <button type="button" class="linkish" id="allStyles">All 19 styles, in the designer →</button>
+          <label class="drop" id="drop" for="upload" aria-disabled="true">Your own logo: a separate PARADOX product, coming soon
+            <input type="file" id="upload" accept=".svg,image/svg+xml,image/png" disabled>
+          </label>
+        </fieldset>
+        <fieldset>
+          <legend>Logos on this garment</legend>
+          <div class="layers" id="layers"></div>
+          <button type="button" class="btn" id="addLogo">+ Add a logo</button>
+        </fieldset>
+        <fieldset>
+          <legend>Ink colour</legend>
+          <div class="sw" id="inkSw"></div>
+        </fieldset>
+        <fieldset>
+          <legend>Placement</legend>
+          <div class="seg" id="placeSeg">
+            <button type="button" data-v="chest">Down the chest</button>
+            <button type="button" data-v="left">Left chest</button>
+            <button type="button" data-v="sleeve">Sleeve</button>
+            <button type="button" data-v="back">Full back</button>
+            <button type="button" data-v="custom">Custom…</button>
+          </div>
+        </fieldset>
+        <div class="range"><label for="wid">Width</label><input type="range" id="wid" min="2" max="40" step="0.5" value="10"><output id="widOut" for="wid">–</output></div>
+        <div class="range"><label for="rot">Angle</label><input type="range" id="rot" min="-90" max="90" step="1" value="0"><output id="rotOut" for="rot">–</output></div>
+        <fieldset>
+          <legend>Method</legend>
+          <div class="seg" id="methodSeg">
+            <button type="button" data-v="print">Screen print</button>
+            <button type="button" data-v="embroidery">Embroidery</button>
+          </div>
+        </fieldset>
+      </div>
+
+      <div class="group">
+        <label class="field" for="edition">Edition name
+          <input type="text" id="edition" maxlength="28">
+        </label>
+        <div class="actions">
+          <button class="btn primary" type="button" id="saveBtn">Save design</button>
+          <button class="btn" type="button" id="shareBtn">Share</button>
+          <button class="btn" type="button" id="resetBtn">Reset</button>
+        </div>
+        <div class="linkbox" id="linkBox" hidden>
+          <input type="text" id="shareLink" readonly aria-label="Share link">
+          <button class="btn" type="button" id="copyLink">Copy</button>
+        </div>
+        <div class="toast" id="toast" role="status"></div>
+      </div>
+
+      <div class="group">
+        <div class="eyebrow">Your designs</div>
+        <div class="list" id="saved"><p class="note">Designs you save, here or in the designer, appear here.</p></div>
+      </div>
+
+      <div class="group" id="queueGroup" hidden style="border-bottom:0">
+        <div class="eyebrow">Production queue</div>
+        <div class="list" id="queue"><p class="note">No orders yet. New orders appear here as they come in.</p></div>
+      </div>
+    </aside>
+  </div>
+
+  <footer>★★★★★ × PARADOX™ is a trademark of PARADOXICA Ltd., a company registered in England and Wales, company no. 17145296.</footer>
+</div>
+
+<script>window.PX_SHARE_BASE='https://claude.ai/artifact/CCmQYhH8xqcNTinDq9XsHg';</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="logos.js"></script>
+<script src="logos-extra.js"></script>
+<script src="logo-designer.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
